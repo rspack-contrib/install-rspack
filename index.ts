@@ -32,8 +32,6 @@ async function normalizeAnswer<T>(
   }
 }
 
-type RELEASE_TAG = 'canary' | 'nightly' | 'latest' | 'beta'
-
 const { values: args } = parseArgs({
   options: {
     version: {
@@ -210,7 +208,7 @@ if (pm === 'npm') {
   // https://pnpm.io/package_json#pnpmpeerdependencyrulesallowany
   pkg.pnpm.peerDependencyRules ??= {}
   pkg.pnpm.peerDependencyRules.allowAny ??= []
-  pkg.pnpm.peerDependencyRules.allowAny.push('vue')
+  pkg.pnpm.peerDependencyRules.allowAny.push('@rspack/*')
 } else if (pm === 'yarn') {
   // https://github.com/yarnpkg/rfcs/blob/master/implemented/0000-selective-versions-resolutions.md
   pkg.resolutions = {

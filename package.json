@@ -1,7 +1,7 @@
 {
   "name": "install-rspack",
-  "version": "0.0.0",
-  "description": "Overrides rspack with prerelease/canary version",
+  "version": "0.0.0-beta.0",
+  "description": "Overrides rspack with latest/canary/nightly/beta version",
   "type": "module",
   "exports": {
     ".": "./outfile.mjs"
