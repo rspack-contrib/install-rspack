@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { resolve, isAbsolute, basename } from 'node:path'
 import { cwd } from 'node:process'
 import { parseArgs } from 'node:util'
-
 import {
   intro,
   outro,
@@ -44,7 +43,25 @@ const { values: args } = parseArgs({
   },
 })
 
-const packageJsonPath = resolve(cwd(), './package.json')
+function getPackageJsonPath() {
+  let root = cwd()
+  let packageJsonPath = args.path
+
+  if (typeof packageJsonPath !== 'string') {
+    packageJsonPath = resolve(root, 'package.json')
+  }
+
+  if (!isAbsolute(packageJsonPath)) {
+    packageJsonPath = resolve(root, packageJsonPath)
+  }
+
+  if (basename(packageJsonPath) !== 'package.json') {
+    packageJsonPath = resolve(packageJsonPath, 'package.json')
+  }
+  return packageJsonPath
+}
+
+const packageJsonPath = getPackageJsonPath()
 if (!existsSync(packageJsonPath)) {
   throw new Error('Cannot find package.json in the current directory')
 }
