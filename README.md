@@ -1,33 +1,38 @@
-# install-vue
+# install-rspack
 
-> Install Vue in your project, with support for pre-release versions.
+> Install Rspack in your project, with support for canary versions.
 
 ## Usage
 
-To install a canary version of Vue in your project, run:
+To install a canary version in your project, run:
 
 ```sh
-npx install-vue@canary
+npx install-rspack --version 0.7.5-canary-d614005-20240625082730
 ```
 
-You can replace `canary` with other pre-release version tags, such as `alpha`, `beta`, or `rc`.
-
-It's also possible to install a specific pre-release version so that you can test for some specific bugs:
+It's also possible to install a specific version:
 
 ```sh
-npx install-vue@canary --version 3.20230911.0
+npx install-rspack@canary --version 0.7.5
 ```
 
-Or
+Use npm tag:
 
 ```sh
-npx install-vue@beta --version 3.3.0-beta.1
+npx install-rspack@canary --version latest
+npx install-rspack@canary --version canary
+npx install-rspack@canary --version nightly
+npx install-rspack@canary --version beta
 ```
-
-As Vue.js currently adopts a feature branch approach for minor releases[^1], you can also install a canary version for the next minor release:
 
 ```sh
-npx install-vue@canary-minor
+npx install-rspack@canary --version 0.7.5-canary-d614005-20240625082730 --path ./foo/app/package.json
 ```
 
-[^1]: That is, while we continue fixing bugs in the `main` branch, we are also working on new features in the `minor` branch. The `minor` branch will eventually be merged into the `main` branch when the next minor release is ready.
+## Credits
+
+Thanks to:
+
+- [install-vue](https://github.com/sodatea/install-vue)
+
+- [vuejs/core](https://github.com/vuejs/core/pull/7860)

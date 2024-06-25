@@ -1,6 +1,6 @@
 {
   "name": "install-rspack",
-  "version": "0.0.0-beta.0",
+  "version": "0.0.1",
   "description": "Overrides rspack with latest/canary/nightly/beta version",
   "type": "module",
   "exports": {
@@ -20,12 +20,12 @@
     "url": "git+https://github.com/rspack-contrib/install-rspack.git"
   },
   "keywords": [
-    "vue",
+    "rspack",
     "canary",
     "alpha",
     "beta"
   ],
-  "author": "Haoqun Jiang <npm@haoqun.me>",
+  "author": "Soon <sooniter@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@clack/prompts": "^0.7.0",
