@@ -1,0 +1,48 @@
+{
+  "name": "install-rspack",
+  "version": "0.0.0",
+  "description": "Overrides rspack with prerelease/canary version",
+  "type": "module",
+  "exports": {
+    ".": "./outfile.mjs"
+  },
+  "bin": "./outfile.mjs",
+  "files": [
+    "outfile.mjs"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "release": "node ./release.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rspack-contrib/install-rspack.git"
+  },
+  "keywords": [
+    "vue",
+    "canary",
+    "alpha",
+    "beta"
+  ],
+  "author": "Haoqun Jiang <npm@haoqun.me>",
+  "license": "MIT",
+  "devDependencies": {
+    "@clack/prompts": "^0.7.0",
+    "@tsconfig/node18": "^18.2.2",
+    "@tsconfig/strictest": "^2.0.2",
+    "@types/node": "18",
+    "esbuild": "^0.19.3",
+    "execa": "^8.0.1",
+    "picocolors": "^1.0.0",
+    "prettier": "^3.0.3",
+    "semver": "^7.5.4"
+  },
+  "engines": {
+    "node": ">= 18.11.0"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
+  "packageManager": "pnpm@8.15.4+sha256.cea6d0bdf2de3a0549582da3983c70c92ffc577ff4410cbf190817ddc35137c2"
+}
