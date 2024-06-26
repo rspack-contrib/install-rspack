@@ -152,7 +152,9 @@ const RSPACK_PACKAGES = [
 const toCanaryPackageName = (name: string) => `${name}-canary`
 
 function getOverrides(version = args.version): Record<string, string> {
-  const isSnapshot = version?.includes('-canary') ?? false
+  const isSnapshot =
+    typeof version === 'string' &&
+    (version.includes('-canary') || ['canary', 'nightly'].includes(version))
   return Object.fromEntries(
     RSPACK_PACKAGES.map((name) => {
       if (isSnapshot) {
