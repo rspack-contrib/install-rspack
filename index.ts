@@ -35,7 +35,9 @@ const { values: args } = parseArgs({
   options: {
     version: {
       type: 'string',
-      default: 'latest',
+    },
+    tag: {
+      type: 'string',
     },
     path: {
       type: 'string',
@@ -141,11 +143,11 @@ const RSPACK_PACKAGES = [
   '@rspack/dev-server',
   '@rspack/plugin-minify',
   '@rspack/plugin-preact-refresh',
-  '@rspack/plugin-react-refresh'
+  '@rspack/plugin-react-refresh',
 ]
 const toCanaryPackageName = (name: string) => `${name}-canary`
 
-function getOverrides(version = args.version): Record<string, string> {
+function getOverrides(version: string): Record<string, string> {
   const isSnapshot =
     typeof version === 'string' &&
     (version.includes('-canary') || ['canary', 'nightly'].includes(version))
@@ -164,17 +166,25 @@ function getOverrides(version = args.version): Record<string, string> {
 }
 
 // apply the overrides to the package.json
-if (pm === 'npm') {
-  // https://github.com/npm/rfcs/blob/main/accepted/0036-overrides.md
-  // Must use exact version (won't work without version or with `@latest`)
+// https://github.com/npm/rfcs/blob/main/accepted/0036-overrides.md
+// We recommend using exact version (won't work without version or with `@latest`)
+async function getTargetVersion(): Promise<string> {
   let targetVersion: string
+  if (args.tag && ['latest', 'canary', 'nightly', 'beta'].includes(args.tag)) {
+    return args.tag
+  }
   if (
     !args.version ||
     ['latest', 'canary', 'nightly', 'beta'].includes(args.version)
   ) {
-    const corePackageName = '@rspack/core'
+    const isSnapshotVersion =
+      args.version && ['nightly', 'canary'].includes(args.version)
+    const corePackageName = isSnapshotVersion
+      ? toCanaryPackageName('@rspack/core')
+      : '@rspack/core'
+
     const s = spinner()
-    const distTag = args.version
+    const distTag = args.version ?? 'latest'
     s.start(`Checking for the latest ${distTag} version`)
     const { stdout } = await execa(
       'npm',
@@ -186,7 +196,12 @@ if (pm === 'npm') {
   } else {
     targetVersion = args.version
   }
+  return targetVersion
+}
 
+const targetVersion = await getTargetVersion()
+
+if (pm === 'npm') {
   let overrides: Record<string, string> = getOverrides(targetVersion)
   pkg.overrides = {
     ...pkg.overrides,
@@ -206,7 +221,7 @@ if (pm === 'npm') {
     }
   }
 } else if (pm === 'pnpm') {
-  const overrides = getOverrides()
+  const overrides = getOverrides(targetVersion)
 
   pkg.pnpm ??= {}
 
@@ -226,7 +241,7 @@ if (pm === 'npm') {
   // https://github.com/yarnpkg/rfcs/blob/master/implemented/0000-selective-versions-resolutions.md
   pkg.resolutions = {
     ...pkg.resolutions,
-    ...getOverrides(),
+    ...getOverrides(targetVersion),
   }
 } else {
   // unreachable
