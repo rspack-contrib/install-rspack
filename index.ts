@@ -136,18 +136,12 @@ if (pmCandidates.length === 1) {
 
 const RSPACK_PACKAGES = [
   '@rspack/binding',
-  '@rspack/binding-darwin-arm64',
-  '@rspack/binding-darwin-x64',
-  '@rspack/binding-linux-x64-gnu',
-  '@rspack/binding-win32-x64-msvc',
-  'create-rspack',
   '@rspack/core',
   '@rspack/cli',
   '@rspack/dev-server',
   '@rspack/plugin-minify',
   '@rspack/plugin-preact-refresh',
-  '@rspack/plugin-react-refresh',
-  '@rspack/test-tools',
+  '@rspack/plugin-react-refresh'
 ]
 const toCanaryPackageName = (name: string) => `${name}-canary`
 
