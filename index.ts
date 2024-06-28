@@ -42,8 +42,35 @@ const { values: args } = parseArgs({
     path: {
       type: 'string',
     },
+    pm: {
+      type: 'string',
+    },
+    ci: {
+      type: 'boolean',
+      default: Boolean(process.env['CI']),
+    },
   },
 })
+
+// decide which package manager to use
+const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn'] as const
+type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]
+const LOCKFILE_TO_PACKAGE_MANAGER: Record<string, PackageManager> = {
+  'pnpm-lock.yaml': 'pnpm',
+  'yarn.lock': 'yarn',
+  'package-lock.json': 'npm',
+  'npm-shrinkwrap.json': 'npm',
+}
+// core-packages to be overridden
+const RSPACK_PACKAGES = [
+  '@rspack/binding',
+  '@rspack/core',
+  '@rspack/cli',
+  '@rspack/dev-server',
+  '@rspack/plugin-minify',
+  '@rspack/plugin-preact-refresh',
+  '@rspack/plugin-react-refresh',
+]
 
 function getPackageJsonPath() {
   let root = cwd()
@@ -63,11 +90,25 @@ function getPackageJsonPath() {
   return packageJsonPath
 }
 
-const packageJsonPath = getPackageJsonPath()
-if (!existsSync(packageJsonPath)) {
-  throw new Error('Cannot find package.json in the current directory')
+function getPackageJson(packageJsonPath: string) {
+  if (!existsSync(packageJsonPath)) {
+    throw new Error('Cannot find package.json in the current directory')
+  }
+  return JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
 }
-const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
+
+if (args.ci) {
+  log.info('Detected you are in CI mode')
+  const packageJsonPath = getPackageJsonPath()
+  const targetVersion = await getTargetVersion()
+  log.info(
+    `Adding install-rspack ${targetVersion} overrides to ${packageJsonPath}`,
+  )
+  const pm = await getPackageManager()
+  await addOverridesToPackageJson(pm, targetVersion, packageJsonPath)
+  log.info(`Done! Don't forget to run ${pico.magenta(`${pm} install`)} later.`)
+  process.exit(0)
+}
 
 intro('Installing Rspack')
 
@@ -93,59 +134,57 @@ try {
   // Do nothing if git is not available, or if it's not a git repo
 }
 
-// decide which package manager to use
-const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn'] as const
-type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]
-const LOCKFILE_TO_PACKAGE_MANAGER: Record<string, PackageManager> = {
-  'pnpm-lock.yaml': 'pnpm',
-  'yarn.lock': 'yarn',
-  'package-lock.json': 'npm',
-  'npm-shrinkwrap.json': 'npm',
-}
-
-let pm: PackageManager = 'npm'
-const pmCandidates: PackageManager[] = []
-for (const [lockfile, pmName] of Object.entries(LOCKFILE_TO_PACKAGE_MANAGER)) {
-  if (existsSync(resolve(cwd(), lockfile))) {
-    pmCandidates.push(pmName)
+async function getPackageManager(): Promise<PackageManager> {
+  if (
+    args.pm &&
+    SUPPORTED_PACKAGE_MANAGERS.includes(args.pm as PackageManager)
+  ) {
+    return args.pm as PackageManager
   }
-}
-if (pmCandidates.length === 1) {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  pm = pmCandidates[0]!
-} else if (pmCandidates.length > 1) {
-  pm = await normalizeAnswer(
-    select({
-      message:
-        'More than one lockfile found, please select the package manager you would like to use',
-      options: pmCandidates.map((candidate) => ({
-        value: candidate,
-        label: candidate,
-      })),
-    }),
-  )
-} else {
-  pm = await normalizeAnswer(
-    select({
-      message: 'Cannot infer which package manager to use, please select',
-      options: SUPPORTED_PACKAGE_MANAGERS.map((candidate) => ({
-        value: candidate,
-        label: candidate,
-      })),
-    }),
-  )
+
+  let pm: PackageManager = 'npm'
+
+  const pmCandidates: PackageManager[] = []
+  for (const [lockfile, pmName] of Object.entries(
+    LOCKFILE_TO_PACKAGE_MANAGER,
+  )) {
+    if (existsSync(resolve(cwd(), lockfile))) {
+      pmCandidates.push(pmName)
+    }
+  }
+  if (pmCandidates.length === 1) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    pm = pmCandidates[0]!
+  } else if (pmCandidates.length > 1) {
+    pm = await normalizeAnswer(
+      select({
+        message:
+          'More than one lockfile found, please select the package manager you would like to use',
+        options: pmCandidates.map((candidate) => ({
+          value: candidate,
+          label: candidate,
+        })),
+      }),
+    )
+  } else {
+    pm = await normalizeAnswer(
+      select({
+        message: 'Cannot infer which package manager to use, please select',
+        options: SUPPORTED_PACKAGE_MANAGERS.map((candidate) => ({
+          value: candidate,
+          label: candidate,
+        })),
+      }),
+    )
+  }
+  return pm
 }
 
-const RSPACK_PACKAGES = [
-  '@rspack/binding',
-  '@rspack/core',
-  '@rspack/cli',
-  '@rspack/dev-server',
-  '@rspack/plugin-minify',
-  '@rspack/plugin-preact-refresh',
-  '@rspack/plugin-react-refresh',
-]
-const toCanaryPackageName = (name: string) => `${name}-canary`
+const pm: PackageManager = await getPackageManager()
+
+function toCanaryPackageName(name: string) {
+  return `${name}-canary`
+}
 
 function getOverrides(version: string): Record<string, string> {
   const isSnapshot =
@@ -200,65 +239,74 @@ async function getTargetVersion(): Promise<string> {
 }
 
 const targetVersion = await getTargetVersion()
+const packageJsonPath = getPackageJsonPath()
+await addOverridesToPackageJson(pm, targetVersion, packageJsonPath)
 
-if (pm === 'npm') {
-  let overrides: Record<string, string> = getOverrides(targetVersion)
-  pkg.overrides = {
-    ...pkg.overrides,
-    ...overrides,
-  }
+async function addOverridesToPackageJson(
+  pm: string,
+  targetVersion: string,
+  packageJsonPath: string,
+) {
+  const pkg = await getPackageJson(packageJsonPath)
+  if (pm === 'npm') {
+    let overrides: Record<string, string> = getOverrides(targetVersion)
+    pkg.overrides = {
+      ...pkg.overrides,
+      ...overrides,
+    }
 
-  // NPM requires direct dependencies to be rewritten too
-  for (const dependencyName of RSPACK_PACKAGES) {
-    for (const dependencyType of [
-      'dependencies',
-      'devDependencies',
-      'optionalDependencies',
-    ]) {
-      if (pkg[dependencyType]?.[dependencyName]) {
-        pkg[dependencyType][dependencyName] = overrides[dependencyName]
+    // NPM requires direct dependencies to be rewritten too
+    for (const dependencyName of RSPACK_PACKAGES) {
+      for (const dependencyType of [
+        'dependencies',
+        'devDependencies',
+        'optionalDependencies',
+      ]) {
+        if (pkg[dependencyType]?.[dependencyName]) {
+          pkg[dependencyType][dependencyName] = overrides[dependencyName]
+        }
       }
     }
-  }
-} else if (pm === 'pnpm') {
-  const overrides = getOverrides(targetVersion)
+  } else if (pm === 'pnpm') {
+    const overrides = getOverrides(targetVersion)
 
-  pkg.pnpm ??= {}
+    pkg.pnpm ??= {}
 
-  // https://pnpm.io/package_json#pnpmoverrides
-  // pnpm & npm overrides differs slightly on their abilities: https://github.com/npm/rfcs/pull/129/files#r440478558
-  // so they use different configuration fields
-  pkg.pnpm.overrides = {
-    ...pkg.pnpm.overrides,
-    ...overrides,
+    // https://pnpm.io/package_json#pnpmoverrides
+    // pnpm & npm overrides differs slightly on their abilities: https://github.com/npm/rfcs/pull/129/files#r440478558
+    // so they use different configuration fields
+    pkg.pnpm.overrides = {
+      ...pkg.pnpm.overrides,
+      ...overrides,
+    }
+
+    // https://pnpm.io/package_json#pnpmpeerdependencyrulesallowany
+    pkg.pnpm.peerDependencyRules ??= {}
+    pkg.pnpm.peerDependencyRules.allowAny ??= []
+    pkg.pnpm.peerDependencyRules.allowAny.push('@rspack/*')
+  } else if (pm === 'yarn') {
+    // https://github.com/yarnpkg/rfcs/blob/master/implemented/0000-selective-versions-resolutions.md
+    pkg.resolutions = {
+      ...pkg.resolutions,
+      ...getOverrides(targetVersion),
+    }
+  } else {
+    // unreachable
   }
 
-  // https://pnpm.io/package_json#pnpmpeerdependencyrulesallowany
-  pkg.pnpm.peerDependencyRules ??= {}
-  pkg.pnpm.peerDependencyRules.allowAny ??= []
-  pkg.pnpm.peerDependencyRules.allowAny.push('@rspack/*')
-} else if (pm === 'yarn') {
-  // https://github.com/yarnpkg/rfcs/blob/master/implemented/0000-selective-versions-resolutions.md
-  pkg.resolutions = {
-    ...pkg.resolutions,
-    ...getOverrides(targetVersion),
-  }
-} else {
-  // unreachable
+  // write pkg back
+  writeFileSync(
+    packageJsonPath,
+    JSON.stringify(pkg, undefined, 2) + '\n',
+    'utf-8',
+  )
+
+  log.step(
+    `Updated ${pico.yellow('package.json')} for ${pico.magenta(
+      pm,
+    )} dependency overrides`,
+  )
 }
-
-// write pkg back
-writeFileSync(
-  packageJsonPath,
-  JSON.stringify(pkg, undefined, 2) + '\n',
-  'utf-8',
-)
-
-log.step(
-  `Updated ${pico.yellow('package.json')} for ${pico.magenta(
-    pm,
-  )} dependency overrides`,
-)
 
 // prompt & run install
 const shouldInstall = await normalizeAnswer(
