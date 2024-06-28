@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { resolve, isAbsolute, basename } from 'node:path'
+import { resolve, isAbsolute, basename, dirname } from 'node:path'
 import { cwd } from 'node:process'
 import { parseArgs } from 'node:util'
 import {
@@ -92,7 +92,7 @@ function getPackageJsonPath() {
 
 function getPackageJson(packageJsonPath: string) {
   if (!existsSync(packageJsonPath)) {
-    throw new Error('Cannot find package.json in the current directory')
+    throw new Error(`Cannot find package.json in ${packageJsonPath}`)
   }
   return JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
 }
@@ -104,7 +104,7 @@ if (args.ci) {
   log.info(
     `Adding install-rspack ${targetVersion} overrides to ${packageJsonPath}`,
   )
-  const pm = await getPackageManager()
+  const pm = await getPackageManager(packageJsonPath)
   await addOverridesToPackageJson(pm, targetVersion, packageJsonPath)
   log.info(`Done! Don't forget to run ${pico.magenta(`${pm} install`)} later.`)
   process.exit(0)
@@ -134,7 +134,9 @@ try {
   // Do nothing if git is not available, or if it's not a git repo
 }
 
-async function getPackageManager(): Promise<PackageManager> {
+async function getPackageManager(
+  packageJsonPath: string,
+): Promise<PackageManager> {
   if (
     args.pm &&
     SUPPORTED_PACKAGE_MANAGERS.includes(args.pm as PackageManager)
@@ -145,13 +147,19 @@ async function getPackageManager(): Promise<PackageManager> {
   let pm: PackageManager = 'npm'
 
   const pmCandidates: PackageManager[] = []
+  const packageJsonDirname = dirname(packageJsonPath)
   for (const [lockfile, pmName] of Object.entries(
     LOCKFILE_TO_PACKAGE_MANAGER,
   )) {
-    if (existsSync(resolve(cwd(), lockfile))) {
+    if (existsSync(resolve(packageJsonDirname, lockfile))) {
       pmCandidates.push(pmName)
     }
   }
+
+  if (args.ci) {
+    return pmCandidates[0] ?? pm
+  }
+
   if (pmCandidates.length === 1) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     pm = pmCandidates[0]!
@@ -180,7 +188,8 @@ async function getPackageManager(): Promise<PackageManager> {
   return pm
 }
 
-const pm: PackageManager = await getPackageManager()
+const packageJsonPath = getPackageJsonPath()
+const pm: PackageManager = await getPackageManager(packageJsonPath)
 
 function toCanaryPackageName(name: string) {
   return `${name}-canary`
@@ -239,7 +248,6 @@ async function getTargetVersion(): Promise<string> {
 }
 
 const targetVersion = await getTargetVersion()
-const packageJsonPath = getPackageJsonPath()
 await addOverridesToPackageJson(pm, targetVersion, packageJsonPath)
 
 async function addOverridesToPackageJson(

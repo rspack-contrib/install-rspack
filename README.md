@@ -51,6 +51,16 @@ Specify the path of a package.json
 npx install-rspack --version 0.7.5-canary-d614005-20240625082730 --path ./foo/app/package.json
 ```
 
+### CI mode
+
+Skip all interactive actions
+
+```sh
+CI=true npx install-rspack --version 0.7.5-canary-d614005-20240625082730
+# or
+CI=true npx install-rspack --version 0.7.5-canary-d614005-20240625082730 --pm pnpm --path ./foo/app/package.json
+```
+
 ## Credits
 
 Thanks to:
