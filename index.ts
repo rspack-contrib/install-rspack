@@ -213,18 +213,19 @@ function getOverrides(version: string): Record<string, string> {
   )
 }
 
+function isDistTag(raw: string): raw is 'latest' | 'canary' | 'nightly' {
+  return ['latest', 'canary', 'nightly', 'alpha'].includes(raw)
+}
+
 // apply the overrides to the package.json
 // https://github.com/npm/rfcs/blob/main/accepted/0036-overrides.md
 // We recommend using exact version (won't work without version or with `@latest`)
 async function getTargetVersion(): Promise<string> {
   let targetVersion: string
-  if (args.tag && ['latest', 'canary', 'nightly', 'beta'].includes(args.tag)) {
+  if (args.tag && isDistTag(args.tag)) {
     return args.tag
   }
-  if (
-    !args.version ||
-    ['latest', 'canary', 'nightly', 'beta'].includes(args.version)
-  ) {
+  if (!args.version || isDistTag(args.version)) {
     const isSnapshotVersion =
       args.version && ['nightly', 'canary'].includes(args.version)
     const corePackageName = isSnapshotVersion
