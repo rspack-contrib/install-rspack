@@ -63,13 +63,8 @@ const LOCKFILE_TO_PACKAGE_MANAGER: Record<string, PackageManager> = {
 }
 // core-packages to be overridden
 const RSPACK_PACKAGES = [
-  '@rspack/binding',
   '@rspack/core',
   '@rspack/cli',
-  '@rspack/dev-server',
-  '@rspack/plugin-minify',
-  '@rspack/plugin-preact-refresh',
-  '@rspack/plugin-react-refresh',
 ]
 
 function getPackageJsonPath() {
