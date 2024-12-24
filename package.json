@@ -1,6 +1,6 @@
 {
   "name": "install-rspack",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Overrides rspack with latest/canary/nightly/beta version",
   "type": "module",
   "exports": {
