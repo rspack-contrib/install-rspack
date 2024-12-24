@@ -13,7 +13,8 @@
   "scripts": {
     "prepare": "pnpm run build",
     "build": "node ./build.js",
-    "release": "node ./scripts/release.mjs"
+    "release": "node ./scripts/release.mjs",
+    "format": "prettier ./index.ts --write"
   },
   "repository": {
     "type": "git",

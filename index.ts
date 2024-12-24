@@ -62,10 +62,7 @@ const LOCKFILE_TO_PACKAGE_MANAGER: Record<string, PackageManager> = {
   'npm-shrinkwrap.json': 'npm',
 }
 // core-packages to be overridden
-const RSPACK_PACKAGES = [
-  '@rspack/core',
-  '@rspack/cli',
-]
+const RSPACK_PACKAGES = ['@rspack/core', '@rspack/cli']
 
 function getPackageJsonPath() {
   let root = cwd()
@@ -188,11 +185,11 @@ const pm: PackageManager = await getPackageManager(packageJsonPath)
 
 // https://github.com/web-infra-dev/rspack/pull/8828
 function toCanaryPackageName(name: string) {
-  if (name === "create-rspack") {
-		return "create-rspack-canary";
-	}
-	const nextName = name.replace(/^@rspack/, "@rspack-canary");
-  return nextName;
+  if (name === 'create-rspack') {
+    return 'create-rspack-canary'
+  }
+  const nextName = name.replace(/^@rspack/, '@rspack-canary')
+  return nextName
 }
 
 function getOverrides(version: string): Record<string, string> {
