@@ -186,8 +186,13 @@ async function getPackageManager(
 const packageJsonPath = getPackageJsonPath()
 const pm: PackageManager = await getPackageManager(packageJsonPath)
 
+// https://github.com/web-infra-dev/rspack/pull/8828
 function toCanaryPackageName(name: string) {
-  return `${name}-canary`
+  if (name === "create-rspack") {
+		return "create-rspack-canary";
+	}
+	const nextName = name.replace(/^@rspack/, "@rspack-canary");
+  return nextName;
 }
 
 function getOverrides(version: string): Record<string, string> {

@@ -15,13 +15,8 @@ npx install-rspack --version 0.7.5-canary-d614005-20240625082730
 {
   "pnpm": {
     "overrides": {
-      "@rspack/binding": "npm:@rspack/binding-canary@0.7.5-canary-d614005-20240625082730",
-      "@rspack/core": "npm:@rspack/core-canary@0.7.5-canary-d614005-20240625082730",
-      "@rspack/cli": "npm:@rspack/cli-canary@0.7.5-canary-d614005-20240625082730",
-      "@rspack/dev-server": "npm:@rspack/dev-server-canary@0.7.5-canary-d614005-20240625082730",
-      "@rspack/plugin-minify": "npm:@rspack/plugin-minify-canary@0.7.5-canary-d614005-20240625082730",
-      "@rspack/plugin-preact-refresh": "npm:@rspack/plugin-preact-refresh-canary@0.7.5-canary-d614005-20240625082730",
-      "@rspack/plugin-react-refresh": "npm:@rspack/plugin-react-refresh-canary@0.7.5-canary-d614005-20240625082730"
+      "@rspack/core": "npm:@rspack-canary/core@0.7.5-canary-d614005-20240625082730",
+      "@rspack/cli": "npm:@rspack-canary/cli@0.7.5-canary-d614005-20240625082730"
     },
     "peerDependencyRules": {
       "allowAny": ["@rspack/*"]
