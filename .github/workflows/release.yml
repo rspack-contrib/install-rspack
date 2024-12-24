@@ -42,6 +42,7 @@ permissions:
 jobs:
   release:
     name: Release
+    environment: production
     permissions:
       contents: write
       # To publish packages with provenance
