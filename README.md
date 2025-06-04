@@ -7,7 +7,7 @@
 To install a canary version in your project, run:
 
 ```sh
-npx install-rspack --version 0.7.5-canary-d614005-20240625082730
+npx install-rspack --version 1.3.13-canary-e56725ae-20250529070819
 ```
 
 ```json
@@ -15,8 +15,8 @@ npx install-rspack --version 0.7.5-canary-d614005-20240625082730
 {
   "pnpm": {
     "overrides": {
-      "@rspack/core": "npm:@rspack-canary/core@0.7.5-canary-d614005-20240625082730",
-      "@rspack/cli": "npm:@rspack-canary/cli@0.7.5-canary-d614005-20240625082730"
+      "@rspack/core": "npm:@rspack-canary/core@1.3.13-canary-e56725ae-20250529070819",
+      "@rspack/cli": "npm:@rspack-canary/cli@1.3.13-canary-e56725ae-20250529070819"
     },
     "peerDependencyRules": {
       "allowAny": ["@rspack/*"]
@@ -28,7 +28,7 @@ npx install-rspack --version 0.7.5-canary-d614005-20240625082730
 It's also possible to install a specific version:
 
 ```sh
-npx install-rspack --version 0.7.5
+npx install-rspack --version 1.3.13
 ```
 
 Use npm tag:
@@ -43,7 +43,7 @@ npx install-rspack --version beta
 Specify the path of a package.json
 
 ```sh
-npx install-rspack --version 0.7.5-canary-d614005-20240625082730 --path ./foo/app/package.json
+npx install-rspack --version 1.3.13-canary-e56725ae-20250529070819 --path ./foo/app/package.json
 ```
 
 ### CI mode
@@ -51,9 +51,9 @@ npx install-rspack --version 0.7.5-canary-d614005-20240625082730 --path ./foo/ap
 Skip all interactive actions
 
 ```sh
-CI=true npx install-rspack --version 0.7.5-canary-d614005-20240625082730
+CI=true npx install-rspack --version 1.3.13-canary-e56725ae-20250529070819
 # or
-CI=true npx install-rspack --version 0.7.5-canary-d614005-20240625082730 --pm pnpm --path ./foo/app/package.json
+CI=true npx install-rspack --version 1.3.13-canary-e56725ae-20250529070819 --pm pnpm --path ./foo/app/package.json
 ```
 
 ## Credits
