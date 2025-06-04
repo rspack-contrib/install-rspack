@@ -192,19 +192,29 @@ function toCanaryPackageName(name: string) {
   return nextName
 }
 
+function isCanaryTag(version: string): boolean {
+  return version === 'canary'
+}
+
+function isSnapshotTag(version: string): boolean {
+  return isCanaryTag(version) || version === 'nightly'
+}
+
 function getOverrides(version: string): Record<string, string> {
   const isSnapshot =
     typeof version === 'string' &&
-    (version.includes('-canary') || ['canary', 'nightly'].includes(version))
+    (version.includes('-canary') || isSnapshotTag(version))
+
+  const targetVersion = isCanaryTag(version) ? 'latest' : version
   return Object.fromEntries(
     RSPACK_PACKAGES.map((name) => {
       if (isSnapshot) {
         return [
           name,
-          `npm:${toCanaryPackageName(name)}${version ? `@${version}` : ''}`,
+          `npm:${toCanaryPackageName(name)}${targetVersion ? `@${targetVersion}` : ''}`,
         ]
       } else {
-        return [name, `${version}`]
+        return [name, `${targetVersion}`]
       }
     }),
   )
@@ -222,15 +232,15 @@ async function getTargetVersion(): Promise<string> {
   if (args.tag && isDistTag(args.tag)) {
     return args.tag
   }
-  if (!args.version || isDistTag(args.version)) {
-    const isSnapshotVersion =
-      args.version && ['nightly', 'canary'].includes(args.version)
+  const version = args.version ?? 'latest'
+  if (isDistTag(version)) {
+    const isSnapshotVersion = isSnapshotTag(version)
     const corePackageName = isSnapshotVersion
       ? toCanaryPackageName('@rspack/core')
       : '@rspack/core'
 
     const s = spinner()
-    const distTag = args.version ?? 'latest'
+    const distTag = isCanaryTag(version) ? 'latest' : version
     s.start(`Checking for the latest ${distTag} version`)
     const { stdout } = await execa(
       'npm',
@@ -240,7 +250,7 @@ async function getTargetVersion(): Promise<string> {
     targetVersion = JSON.parse(stdout)
     s.stop(`Found ${distTag} version ${pico.yellow(targetVersion)}`)
   } else {
-    targetVersion = args.version
+    targetVersion = version
   }
   return targetVersion
 }
