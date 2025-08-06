@@ -211,7 +211,9 @@ function getOverrides(version: string): Record<string, string> {
       if (isSnapshot) {
         return [
           name,
-          `npm:${toCanaryPackageName(name)}${targetVersion ? `@${targetVersion}` : ''}`,
+          `npm:${toCanaryPackageName(name)}${
+            targetVersion ? `@${targetVersion}` : ''
+          }`,
         ]
       } else {
         return [name, `${targetVersion}`]
