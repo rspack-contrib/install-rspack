@@ -14,7 +14,8 @@
     "prepare": "pnpm run build",
     "build": "node ./build.js",
     "release": "node ./scripts/release.mjs",
-    "format": "prettier ./index.ts --write"
+    "format": "prettier ./index.ts --write",
+    "bump": "npx bumpp"
   },
   "repository": {
     "type": "git",
